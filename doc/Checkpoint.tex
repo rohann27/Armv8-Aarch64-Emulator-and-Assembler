@@ -1,0 +1,83 @@
+\documentclass[11pt]{article}
+
+\usepackage{fullpage}
+\usepackage{dirtree}
+\usepackage[most]{tcolorbox}
+\usepackage{parskip}
+
+\begin{document}
+
+\title{ARMv8 AArch64 Project - Checkpoint}
+\author{Baray Efe Rafioglu, Azra Nesrin Ayer, Rohan Choudhary, Ege Hurturk}
+\date{June 6, 2025} %should i add the date??
+
+\maketitle
+\small
+
+\section{Group Organisation}
+
+At the beginning of our project, we split the work based on main instruction types. Ege worked on the main execution loop and Single Data Instructions. Rohan worked on Branch Instructions and Bitwise Shifts. Baray worked on Immediate Data Processing Instructions, and Azra worked on Register Data Processing Instructions.
+
+We created separate branches for each task and worked on them individually, but reviewed each other’s work as a group before merging to the master branch. We also held peer coding sessions where we collaborated to understand the spec, and worked on helper functions to use across the project.
+
+We ensured that everyone was kept informed about changes and progress. We communicated regularly and made an effort to include everyone’s ideas and feedback.
+
+\section{Implementation Strategies}
+
+\subsection{Emulator Design and Reusability for Assembler}
+
+Our emulator was designed with modularity and clarity
+in mind, particularly to facilitate the reuse of components in the development of the assembler.
+
+A central design goal was to minimize the use of global variables across the codebase. Instead of relying on a global \texttt{machine\_state} struct, we implemented memory management functions, \texttt{new\_machine\_state} and \texttt{free\_machine\_state}, to allocate and deallocate memory on the heap. This pointer-based approach makes it easier to manage memory explicitly.
+
+Handling instructions was also modularised. Each instruction group (e.g., data processing, load/store, branching) is located in its own source file with a descriptive name. At the top level, the emulator uses the \texttt{getRangeInt} function to get specific bits from the 32-bit instruction.  The emulator then dispatches execution to a handler function, which in turn calls sub-functions depending on bits in instruction. This structure makes the codebase easily extendable for new instruction types. Utility functions that are shared across the instruction handlers were placed in a separate \texttt{utils.c} file. These include bit manipulation helpers such as \texttt{getRangeInt}, overflow detection, and functions for loading/storing words and doublewords to memory in little-endian order. It also contains utilities like \texttt{fetch\_next\_instruction} which fetches the next 4-byte instruction using the program counter.
+
+\subsection{Project Organisation}
+\noindent
+\begin{minipage}[t]{0.44\textwidth}
+\vspace*{0pt}
+\begin{tcolorbox}[title=Directory Tree, colback=white, colframe=black!75!black, boxsep=2pt, left=2pt, right=2pt, top=2pt, bottom=2pt]
+\scriptsize
+\dirtree{%
+.1 Project Root.
+.2 src/.
+.3 emulator/.
+.4 emulate.c.
+.4 utils.c.
+.4 \dots.
+.4 Makefile.
+.3 assembler/.
+.4 assemble.c.
+.4 \dots.
+.4 Makefile.
+.3 Makefile.
+.2 README.md.
+.2 \dots.
+.2 Makefile.
+}
+\end{tcolorbox}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.53\textwidth}
+\vspace*{0pt}
+To maintain a clear separation of responsibilities, we divided the \texttt{src} directory into two subdirectories: \texttt{emulator} and \texttt{assembler}. Each has its own \texttt{Makefile}, while the root \texttt{Makefile} in \texttt{src} delegates to these two to build both tools. Compilation outputs, including object and executable files, are placed inside a dedicated \texttt{out} directory, which is further split into \texttt{emulator} and \texttt{assembler} subdirectories. This keeps the repository clean and makes it easy to configure version control to ignore generated files.
+\\ 
+\\
+We anticipate that several components from the emulator can be reused in the assembler. In particular, the \texttt{utils.c} module provides generic bit manipulation and memory utilities that are equally applicable to parsing and emitting binary instructions in the assembler. Additionally, \texttt{ioutils.c}, which handles file loading and output writing, can be repurposed for the assembler's file I/O pipeline.
+
+\end{minipage}
+
+
+
+\section{Group evaluation}
+At the start of the emulator phase of our project, we assigned tasks to each team member without spending enough time discussing the overall structure and code style guidelines. While this approach allowed everyone to get started quickly and work independently, it also introduced bugs and led to inconsistencies and integration challenges later on. As a result, after finishing most of the emulator, we had to go back and refactor a large chunk of the code to adhere to the code style guidelines we had agreed on. One major issue with the absence of unified naming and parameter standards across the code was that functions would be called with incorrect arguments. Team members assumed that everyone handled parameters as they did when, in fact, they were sometimes handled differently. An example occurred when we were distinguishing between the use of \texttt{32-bit} and \texttt{64-bit} registers. While some functions took the parameter \texttt{is\_32bit}, some others took \texttt{is\_64bit}. After reflecting on Part 1, we realised issues like the above arose when our team were not in the labs at the same time so that we could communcicate quickly. However it's not always possible to get everyone together, so we are thinking of implementing Slack into the remainder of the project, so that the key information is in a unified place, and group members can receive updates quickly.
+
+\section{Future implementation tasks}
+
+We anticipate that implementing sections of the project that require close collaboration between the team and an understanding of the code sections authored by different team members will be the most challenging. Particularly sections such as:
+The \texttt{assembler.c} file where we will need to use all the various functions that decode a given assembly instruction to machine code and the sections where we are required to use the symbol table abstract data type created by another team member in order to access values.
+
+We plan to avoid these issues in the future by dedicating more time to discussing the style guidelines and the project's structure before we start to implement our ideas. We will also be more careful to provide clear definitions and comments on the functions we implement, allowing our teammates to use and understand them more easily. These changes help us avoid the issues we faced earlier and allow us to work more efficiently during the following stages of our project.
+ 
+\end{document}
